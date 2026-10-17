@@ -1,0 +1,22 @@
+---
+import FlowBuilder from '../components/FlowBuilder.tsx';
+import '../styles/global.css';
+const adClient = import.meta.env.PUBLIC_ADSENSE_CLIENT || '';
+const adSlot = import.meta.env.PUBLIC_ADSENSE_SLOT || '';
+const adsEnabled = import.meta.env.PUBLIC_ADSENSE_ENABLED === 'true';
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content="Your local-first flow diagram workspace. Build steps and boolean branches, then simulate the possibilities." />
+    <title>Your flows — Show the Path</title>
+  </head>
+  <body>
+    <FlowBuilder client:only="react" adClient={adClient} adSlot={adSlot} adsEnabled={adsEnabled}>
+      <p slot="fallback">Opening your workspace…</p>
+    </FlowBuilder>
+    <noscript>JavaScript is required for the flow builder and browser-local saving. <a href="/">Learn about Show the Path.</a></noscript>
+  </body>
+</html>

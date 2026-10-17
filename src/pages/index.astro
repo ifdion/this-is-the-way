@@ -1,16 +1,34 @@
 ---
+import '../styles/global.css';
 ---
-
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Build clear flow diagrams, explore boolean branches, and simulate every what-if. Automatic layout, loop references, and browser-local saving." />
+    <title>Show the Path — Make your thinking visible</title>
+  </head>
+  <body class="landing">
+    <nav class="landing-nav" aria-label="Main navigation"><a class="brand" href="/"><span class="brand-mark">↳</span> show the path</a><div class="landing-nav-links"><a href="#features">Features</a><a href="#how-it-works">How it works</a><a class="primary" href="/builder">Open builder ↗</a></div></nav>
+    <main>
+      <section class="landing-hero">
+        <div class="hero-copy"><span class="hero-pill"><span class="status-dot"></span> A calmer way to map what happens next</span><h1>Big ideas.<br />Clear paths.<br /><em>One step at a time.</em></h1><p>Turn the flow in your head into something you can see. Build the happy path, branch into the what-ifs, and walk through every possibility.</p><div class="hero-actions"><a class="primary" href="/builder">Start mapping your idea →</a><a href="#how-it-works">See how it works ↓</a></div><div class="hero-footnote"><span>✓ No account needed</span><span>✓ Saved in your browser</span><span>✓ Desktop-first</span></div></div>
+        <div class="hero-diagram" role="img" aria-label="Example flow: Start, shape your idea, decide whether it is ready, build if Yes, or loop back if No."><div class="preview-topbar"><i></i><i></i><i></i><span>A little launch plan</span></div><div class="preview-diagram"><svg viewBox="0 0 480 395" fill="none" aria-hidden="true"><path d="M125 66V106 M125 165V200 M125 290V327 M212 245H283" stroke="#b7c8a6" stroke-width="1.5"/><path d="m121 100 4 6 4-6m-8 94 4 6 4-6m-8 127 4 6 4-6m148-86 6 4-6 4" stroke="#a5bc8e" /></svg><div class="preview-node preview-start">● &nbsp; Start</div><div class="preview-node preview-step"><small>STEP 01</small>Shape your idea</div><div class="preview-decision"><span>Ready to build?</span></div><span class="preview-label yes">Yes</span><span class="preview-label no">No</span><div class="preview-node preview-finish"><small>THE HAPPY PATH</small>Build something small</div><div class="preview-node preview-alternative"><small>↩ LOOP TO</small>Shape your idea</div></div><div class="preview-badge">✧ Automatically arranged. Always clear.</div></div>
+      </section>
+      <div class="landing-strip"><span>↓ Follow the happy path</span><span>◇ Make room for the what-ifs</span><span>↩ Loop back, without the clutter</span><span>▷ Think it through in simulation</span></div>
+      <section class="features-section" id="features"><div class="section-heading"><div class="eyebrow">LESS ARRANGING. MORE THINKING.</div><h2>Everything flows from here.</h2><p>No wrestling with arrows or nudging boxes into place.<br />Just your idea, and the next right step.</p></div><div class="feature-grid">
+        <article class="feature-card"><span class="feature-icon">↓</span><h3>A happy path that stays happy.</h3><p>Click to add a step. Your flow grows vertically, with automatic layout keeping the main path in one clean column.</p></article>
+        <article class="feature-card"><span class="feature-icon">◇</span><h3>Simple questions. Clear branches.</h3><p>Every diamond asks a boolean question. Yes goes down. No goes right. More alternatives? Add another decision.</p></article>
+        <article class="feature-card"><span class="feature-icon">↩</span><h3>Come full circle.</h3><p>Loop to an existing step by name. A translucent alias keeps the reference visible without tangling up your diagram.</p></article>
+        <article class="feature-card"><span class="feature-icon">▷</span><h3>Take your idea for a walk.</h3><p>Switch to simulation, choose an outcome, and follow the path. Go back, restart, and explore a different possibility.</p></article>
+        <article class="feature-card"><span class="feature-icon">⌘</span><h3>A home for every flow.</h3><p>Create, rename, and duplicate multiple flows. Changes save to IndexedDB in this browser—no account or backend required.</p></article>
+        <article class="feature-card"><span class="feature-icon">⊞</span><h3>Never lose the bigger picture.</h3><p>When a flow grows beyond the canvas, a clickable minimap helps you find your way. Undo and redo keep edits forgiving.</p></article>
+      </div></section>
+      <section class="how-section" id="how-it-works"><div class="section-heading"><div class="eyebrow">FROM IN YOUR HEAD TO IN FRONT OF YOU</div><h2>Three steps to a clearer picture.</h2></div><div class="how-grid"><article><span>01 / BUILD</span><h3>Start with the next step.</h3><p>Name your flow and add a few steps. Give each one a title and as much context as it needs.</p></article><article><span>02 / BRANCH</span><h3>Ask “what if?”</h3><p>Add a diamond when the path splits. Explore the alternative to the right, or loop to somewhere familiar.</p></article><article><span>03 / SIMULATE</span><h3>Follow your own thinking.</h3><p>Walk from Start through each choice. Find the gaps and refine the flow before taking it into the real world.</p></article></div></section>
+      <section class="landing-cta"><div class="eyebrow">GIVE THAT IDEA SOMEWHERE TO GO</div><h2>Your next clear path starts here.</h2><p>A blank canvas. A first step. A little more clarity.</p><a class="primary" href="/builder">Open the builder →</a><small>POC · Desktop editing · Flows stay in this browser. Clearing site data removes saved flows, so don’t use this version as the only copy of important work.</small></section>
+      <p class="roadmap-note">On the horizon: accounts, backend saving, sharing, and export to PDF, Mermaid, and Markdown.<br />Not part of this POC—just a look at where the path leads next.</p>
+    </main>
+    <footer class="landing-footer"><a class="brand" href="/"><span class="brand-mark">↳</span> show the path</a><span>For ideas that deserve a little clarity.</span></footer>
+  </body>
 </html>
