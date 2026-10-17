@@ -55,7 +55,9 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [run, setRun] = useState<Simulation | null>(null);
   const [search, setSearch] = useState("");
-  const [keep, setKeep] = useState<DeleteChoice>("next");
+  const [keep, setKeep] = useState<DeleteChoice | "">("");
+  const [deletingFlow, setDeletingFlow] = useState(false);
+  const deletingIds = useRef(new Set<string>());
   const queue = useRef(Promise.resolve());
   const revision = useRef(0);
   const dirty = useRef(false);
@@ -101,6 +103,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
   }, [repository]);
 
   function persist(next: Flow) {
+    if (deletingIds.current.has(next.id)) return;
     unsaved.current.set(next.id, next);
     dirty.current = true;
     const version = ++revision.current;
@@ -151,7 +154,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
   }
 
   function apply(next: Flow, group?: string) {
-    if (!history) return;
+    if (!history || deletingIds.current.has(next.id)) return;
     const merge = !!group && editGroup.current === group;
     editGroup.current = group || null;
     setHistories((previous) => ({
@@ -186,6 +189,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
     : undefined;
   const current = flow && run ? flow.nodes[run.current] : undefined;
   const closeDialog = () => {
+    if (deletingFlow) return;
     setDialog(null);
     setSearch("");
   };
@@ -598,7 +602,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                             <button
                               className="danger text-button delete-card"
                               onClick={() => {
-                                setKeep("next");
+                                setKeep(selectedNode.kind === "decision" ? "" : "next");
                                 setDialog({
                                   kind: "delete-node",
                                   id: selectedNode.id,
@@ -682,6 +686,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
               if (!title) return;
               const item = histories[dialog.flowId].present;
               const next = { ...item, title, updatedAt: Date.now() };
+              editGroup.current = null;
               setHistories((previous) => ({
                 ...previous,
                 [item.id]: commit(previous[item.id], next),
@@ -726,21 +731,27 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
         </Modal>
       )}
       {dialog?.kind === "delete-flow" && (
-        <Modal title="Delete this flow?" onClose={closeDialog}>
+        <Modal title="Delete this flow?" onClose={closeDialog} busy={deletingFlow}>
           <p>
             This removes{" "}
             <strong>{histories[dialog.flowId]?.present.title}</strong> and all
             its cards from this browser. This action cannot be undone.
           </p>
           <div className="modal-actions">
-            <button onClick={closeDialog}>Cancel</button>
+            <button onClick={closeDialog} disabled={deletingFlow}>Cancel</button>
             <button
               className="destructive"
+              disabled={deletingFlow}
               onClick={async () => {
                 const id = dialog.flowId;
+                if (deletingIds.current.has(id)) return;
+                deletingIds.current.add(id);
+                setDeletingFlow(true);
+                dirty.current = true;
+                const removal = queue.current.catch(() => {}).then(() => repository.remove(id));
+                queue.current = removal.catch(() => {});
                 try {
-                  await queue.current;
-                  await repository.remove(id);
+                  await removal;
                   unsaved.current.delete(id);
                   dirty.current = unsaved.current.size > 0;
                   setHistories((previous) => {
@@ -752,16 +763,20 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                     setActiveId(null);
                     setRun(null);
                   }
-                  closeDialog();
+                  setDialog(null);
                 } catch {
+                  deletingIds.current.delete(id);
+                  dirty.current = unsaved.current.size > 0;
                   setError(
                     "This flow could not be deleted. Please retry when browser storage is available.",
                   );
-                  closeDialog();
+                  setDialog(null);
+                } finally {
+                  setDeletingFlow(false);
                 }
               }}
             >
-              Delete flow
+              {deletingFlow ? "Deleting…" : "Delete flow"}
             </button>
           </div>
         </Modal>
@@ -824,6 +839,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
             closeDialog();
           }}
           onDelete={() => {
+            if (!keep) return;
             apply(deleteNode(flow, dialog.id, keep));
             setSelected(flow.start);
             closeDialog();
@@ -943,14 +959,14 @@ function DeleteCardDialog({
 }: {
   flow: Flow;
   id: string;
-  keep: DeleteChoice;
-  onKeep: (choice: DeleteChoice) => void;
+  keep: DeleteChoice | "";
+  onKeep: (choice: DeleteChoice | "") => void;
   onClose: () => void;
   onResolve: (id: string) => void;
   onDelete: () => void;
 }) {
   const node = flow.nodes[id];
-  const plan = previewDeletion(flow, id, keep);
+  const plan = keep ? previewDeletion(flow, id, keep) : null;
   return (
     <Modal title="Delete card" onClose={onClose}>
       {node.kind === "decision" ? (
@@ -958,8 +974,9 @@ function DeleteCardDialog({
           What should happen to its paths?
           <select
             value={keep}
-            onChange={(event) => onKeep(event.target.value as DeleteChoice)}
+            onChange={(event) => onKeep(event.target.value as DeleteChoice | "")}
           >
+            <option value="" disabled>Choose which path to keep…</option>
             <option value="next">Keep Yes path; remove No path</option>
             <option value="no">Keep No path; remove Yes path</option>
             <option value="all">Remove both downstream paths</option>
@@ -971,7 +988,7 @@ function DeleteCardDialog({
           preserved.
         </p>
       )}
-      <div className="deletion-preview">
+      {plan && <div className="deletion-preview">
         <strong>
           {plan.removed.length} card{plan.removed.length === 1 ? "" : "s"} will
           be removed
@@ -985,8 +1002,8 @@ function DeleteCardDialog({
             </li>
           ))}
         </ul>
-      </div>
-      {plan.references.length > 0 && (
+      </div>}
+      {plan && plan.references.length > 0 && (
         <div className="reference-warning">
           <p>Resolve these aliases first so no loops point to deleted cards:</p>
           {plan.references.map((reference) => (
@@ -1001,10 +1018,10 @@ function DeleteCardDialog({
         <button onClick={onClose}>Cancel</button>
         <button
           className="destructive"
-          disabled={plan.references.length > 0}
+          disabled={!plan || plan.references.length > 0}
           onClick={onDelete}
         >
-          Delete card{plan.removed.length > 1 ? "s" : ""}
+          Delete card{plan && plan.removed.length > 1 ? "s" : ""}
         </button>
       </div>
     </Modal>

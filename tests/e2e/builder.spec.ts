@@ -127,3 +127,62 @@ test('unconfigured AdSense does not contact the ad network', async ({ page }) =>
   await expect(page.getByRole('complementary', { name: 'Advertisement' })).toBeVisible();
   expect(requests).toEqual([]);
 });
+
+test('decision deletion requires an explicit path choice', async ({ page }) => {
+  await createFlow(page, 'Choose before deleting');
+  await inspector(page).getByRole('button', { name: '◇ Add branch', exact: true }).click();
+  await inspector(page).getByRole('button', { name: 'Delete card…' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('button', { name: /^Delete card/ })).toBeDisabled();
+  await dialog.getByRole('combobox').selectOption('next');
+  await expect(dialog.getByRole('button', { name: /^Delete card/ })).toBeEnabled();
+});
+
+test('undo after renaming a flow does not undo the rename with a text edit', async ({ page }) => {
+  await createFlow(page, 'Original name');
+  await addStep(page, 'Initial title');
+  await inspector(page).getByLabel('Title', { exact: true }).fill('First edit');
+  await page.getByRole('button', { name: 'Manage Original name', exact: true }).click();
+  await page.getByLabel('Flow name').fill('Renamed');
+  await page.getByRole('button', { name: 'Save name' }).click();
+  await inspector(page).getByLabel('Title', { exact: true }).fill('Second edit');
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Renamed', exact: true })).toBeVisible();
+  await expect(inspector(page).getByLabel('Title', { exact: true })).toHaveValue('First edit');
+});
+
+test('a pending deletion cannot be dismissed or raced with another edit', async ({ page }) => {
+  await createFlow(page, 'Delete safely');
+  await expect(page.getByText('Saved in this browser', { exact: true })).toBeVisible();
+  // A real competing transaction holds the browser-storage write lock.
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const opening = indexedDB.open('show-the-path', 1);
+    opening.onerror = () => reject(opening.error);
+    opening.onsuccess = () => {
+      const db = opening.result;
+      const transaction = db.transaction('flows', 'readwrite');
+      const store = transaction.objectStore('flows');
+      const deadline = Date.now() + 10000;
+      function hold() {
+        store.get('storage-lock').onsuccess = () => {
+          resolve();
+          if (document.documentElement.dataset.releaseStorageLock !== 'yes' && Date.now() < deadline) hold();
+        };
+      }
+      transaction.oncomplete = () => db.close();
+      hold();
+    };
+  }));
+  await page.getByRole('button', { name: 'Manage Delete safely', exact: true }).click();
+  await page.getByRole('button', { name: 'Delete this flow…' }).click();
+  await page.getByRole('button', { name: 'Delete flow', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Deleting…' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Close dialog' })).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.evaluate(() => { document.documentElement.dataset.releaseStorageLock = 'yes'; });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Your flows', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Manage Delete safely', exact: true })).toHaveCount(0);
+});
