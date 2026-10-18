@@ -205,7 +205,7 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
             {libraryCollapsed ? "☰" : "⇤"}
           </button>
           <a className="brand" href="/">
-            <span className="brand-mark">↳</span> show the path
+            <span className="brand-mark"><span className="brand-glyph">↳</span></span> this-is-the-way
             <span className="beta-tag">POC</span>
           </a>
         </div>

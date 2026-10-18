@@ -158,7 +158,7 @@ test('a pending deletion cannot be dismissed or raced with another edit', async 
   await expect(page.getByText('Saved in this browser', { exact: true })).toBeVisible();
   // A real competing transaction holds the browser-storage write lock.
   await page.evaluate(() => new Promise<void>((resolve, reject) => {
-    const opening = indexedDB.open('show-the-path', 1);
+    const opening = indexedDB.open('this-is-the-way', 1);
     opening.onerror = () => reject(opening.error);
     opening.onsuccess = () => {
       const db = opening.result;

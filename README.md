@@ -1,4 +1,4 @@
-# Show the Path
+# This Is the Way
 
 A desktop-first, browser-local flow diagram builder. Astro serves a landing page at `/` and an interactive React workspace at `/builder`.
 
@@ -28,7 +28,7 @@ Open http://localhost:4321. Manage the server with `pnpm exec astro dev status`,
 
 ## Storage and limits
 
-Flows are saved in the `show-the-path` IndexedDB database, schema version 1. Saving completes only after the transaction commits. The app warns before leaving with pending or failed writes.
+Flows are saved in the `this-is-the-way` IndexedDB database, schema version 1. Saving completes only after the transaction commits. The app warns before leaving with pending or failed writes.
 
 This POC has **no accounts, server backup, cross-device sync, collaboration, or export**. Browser data can be evicted or cleared; private browsing can restrict persistence. Do not use it as the only copy of important work. Use one editing tab per flow; concurrent-tab conflict handling is not implemented. Undo history and simulation history are not persisted.
 

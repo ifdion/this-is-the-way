@@ -6,7 +6,7 @@ export class FlowRepository {
   private factory: IDBFactory;
   private name: string;
 
-  constructor(factory: IDBFactory = indexedDB, name = "show-the-path") {
+  constructor(factory: IDBFactory = indexedDB, name = "this-is-the-way") {
     this.factory = factory;
     this.name = name;
   }
