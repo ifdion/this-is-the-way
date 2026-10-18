@@ -19,6 +19,22 @@ Source: user decisions in the idea-to-build conversation. Review baseline: `15f7
 11. A minimap appears whenever diagram height or width exceeds the visible canvas, shows the viewport, and supports navigation.
 12. Reserve an advertising container outside the canvas. Provider: AdSense. No IDs are available, so leave a placeholder and configurable integration. Do not claim live ads are working without real IDs and site approval.
 
+## Workspace refinements
+
+User-requested follow-up, superseding the diamond-shaped card presentation in requirement 4:
+
+- Collapse/expand the left flow library.
+- Keep the advertisement pinned below independently scrollable inspector controls.
+- Reduce card padding and vertical/horizontal spacing.
+- Show Step/Decision labels only on hover or keyboard focus. Render decisions as rectangular cards with a solid diamond at the top-left.
+- Give terminal steps the same rounded styling as Start.
+- Give Loop to the same button treatment as Step and Branch in empty-path placeholders; open its picker directly.
+- Clicking an alias highlights it and opens its inspector; its separate arrow button scrolls to the referenced original. The inspector exposes a change-target action that reopens the target picker to re-point the reference.
+- Hovering or keyboard-focusing an alias shows an elbow-shaped reference path (right edge of alias to right edge of the origin, 60px-rounded corners) while the origin highlights, without changing selection or the saved flow. The landing-page preview matches the current compact cards and always shows the same reference path.
+- Convert a step to a decision in place, preserving content, connections, aliases, and undo support. Terminal steps can additionally convert in place to a loop reference through the picker.
+- Show the Continue-this-path placeholder card and its incoming arrow only while the owning card is selected in Build mode.
+- Match minimap highlights to actual canvas scroll bounds; update on scroll, layout, sidebar, and viewport changes.
+
 ## Later, not POC
 
 Backend storage, login, sharing, and export to PDF, Mermaid, and Markdown.

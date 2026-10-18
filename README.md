@@ -16,13 +16,14 @@ Open http://localhost:4321. Manage the server with `pnpm exec astro dev status`,
 ## Build a flow
 
 - Create a named flow or try the included launch-plan example.
-- Select a card. **Add step** inserts a regular card; **Add branch** inserts a boolean diamond, retaining the existing continuation below.
-- **Yes goes down. No goes right.** More outcomes are represented by additional diamonds, each with exactly two outcomes. Labels are editable.
-- Use **Loop to…** on an empty connection to search existing cards by name and path. A translucent alias references the original; it has no independent continuation.
+- Select a card. **Add step** inserts a regular card; **Add branch** inserts a rectangular decision card with a solid diamond icon, retaining the existing continuation below. **Convert to decision** changes an existing step in place, preserving its contents, continuation, and incoming references; conversion can be undone.
+- **Yes goes down. No goes right.** More outcomes are represented by additional decisions, each with exactly two outcomes. Labels are editable. Terminal steps have the same rounded design as Start and no Step indicator; other step/decision type labels appear on hover or keyboard focus. The **Continue this path** card and its arrow only appear while their owning card is selected.
+- Use **Loop to** on an empty path (or the inspector’s **Loop to an existing step** action) to search existing cards by name and path. A translucent alias references the original; it has no independent continuation. Hovering it (or keyboard-focusing it) draws an elbow-shaped reference path — out of the alias’s right edge, around with 60px-rounded corners, into the original’s right edge — while the origin highlights. Clicking an alias highlights it and opens its inspector. Its **↗** button scrolls to and selects the referenced original; **⇄ Change loop target…** reopens the picker to re-point the reference (undoable). A terminal step can become a loop reference with **↩ Convert to loop to…** (undoable, blocked while other aliases reference it).
 - Edit a title and optional description in the inspector. Text edits and diagram changes automatically save to IndexedDB, with saving/error feedback and a retry action. **Save changes** also trims the current fields explicitly. Consecutive edits to one field are grouped for undo.
 - **Simulate** walks from Start through manual choices and loops. Back and Restart affect only the simulation; returning to Build discards simulation history.
 - Card deletion previews its effects. Ordinary-card deletion reconnects the continuation; decision deletion explicitly keeps a path or removes both. External aliases must be resolved first. Undo/redo are available for diagram edits, not whole-flow deletion.
 - A clickable, keyboard-navigable minimap appears when the layout exceeds the canvas height or width.
+- Collapse the flow library from the top-left toolbar. Inspector controls scroll independently above the pinned advertisement; neither operation moves the ad into the canvas. The minimap tracks the actual scroll viewport and updates after layout changes and resizing.
 - Create, rename, duplicate, and delete multiple flows. Whole-flow deletion requires confirmation.
 
 ## Storage and limits

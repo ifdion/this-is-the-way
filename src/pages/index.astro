@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { aliasElbow } from '../lib/layout.ts';
+const previewCurve = aliasElbow({ x: 236, y: 200 }, { x: 50, y: 112 }, 150, 52);
 ---
 <html lang="en">
   <head>
@@ -14,13 +16,34 @@ import '../styles/global.css';
     <main>
       <section class="landing-hero">
         <div class="hero-copy"><span class="hero-pill"><span class="status-dot"></span> A calmer way to map what happens next</span><h1>Big ideas.<br />Clear paths.<br /><em>One step at a time.</em></h1><p>Turn the flow in your head into something you can see. Build the happy path, branch into the what-ifs, and walk through every possibility.</p><div class="hero-actions"><a class="primary" href="/builder">Start mapping your idea →</a><a href="#how-it-works">See how it works ↓</a></div><div class="hero-footnote"><span>✓ No account needed</span><span>✓ Saved in your browser</span><span>✓ Desktop-first</span></div></div>
-        <div class="hero-diagram" role="img" aria-label="Example flow: Start, shape your idea, decide whether it is ready, build if Yes, or loop back if No."><div class="preview-topbar"><i></i><i></i><i></i><span>A little launch plan</span></div><div class="preview-diagram"><svg viewBox="0 0 480 395" fill="none" aria-hidden="true"><path d="M125 66V106 M125 165V200 M125 290V327 M212 245H283" stroke="#b7c8a6" stroke-width="1.5"/><path d="m121 100 4 6 4-6m-8 94 4 6 4-6m-8 127 4 6 4-6m148-86 6 4-6 4" stroke="#a5bc8e" /></svg><div class="preview-node preview-start">● &nbsp; Start</div><div class="preview-node preview-step"><small>STEP 01</small>Shape your idea</div><div class="preview-decision"><span>Ready to build?</span></div><span class="preview-label yes">Yes</span><span class="preview-label no">No</span><div class="preview-node preview-finish"><small>THE HAPPY PATH</small>Build something small</div><div class="preview-node preview-alternative"><small>↩ LOOP TO</small>Shape your idea</div></div><div class="preview-badge">✧ Automatically arranged. Always clear.</div></div>
+        <div class="hero-diagram" aria-label="Example flow with a loop reference">
+          <div class="preview-topbar"><i></i><i></i><i></i><span>A little launch plan</span></div>
+          <div class="preview-diagram">
+            <svg viewBox="0 0 480 366" fill="none" aria-hidden="true">
+              <defs><marker id="preview-loop-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="#36744e" stroke-width="1.5" /></marker></defs>
+              <path d="M125 76V112 M125 164V200 M125 252V288 M200 226H236" stroke="#b7c8a6" stroke-width="1.5" />
+              <path d="m121 106 4 6 4-6m-8 82 4 6 4-6m-8 82 4 6 4-6m103-66 6 4-6 4" stroke="#a5bc8e" />
+              <path class="preview-loop-curve" d={previewCurve} stroke="#36744e" stroke-width="2" marker-end="url(#preview-loop-arrow)" />
+            </svg>
+            <div class="preview-node preview-start"><small>● ENTRY POINT</small>Start</div>
+            <div id="preview-origin" class="preview-node preview-step" tabindex="-1"><small class="preview-kind">STEP</small>Shape your idea</div>
+            <div class="preview-node preview-decision"><span class="decision-icon" aria-hidden="true">◆</span><small class="preview-kind">DECISION</small><span>Ready to build?</span></div>
+            <span class="preview-label yes">Yes</span><span class="preview-label no">No</span>
+            <div class="preview-node preview-finish">Build something small</div>
+            <div class="preview-alias-group">
+              <button class="preview-node preview-alternative" aria-label="Preview loop to Shape your idea"><small>↩ LOOP TO</small>Shape your idea</button>
+              <a class="preview-jump" href="#preview-origin" aria-label="Go to preview origin" title="Go to referred step">↗</a>
+            </div>
+            <span class="preview-tip">Loop references always point home ↗</span>
+          </div>
+          <div class="preview-badge">✧ Automatically arranged. Always clear.</div>
+        </div>
       </section>
       <div class="landing-strip"><span>↓ Follow the happy path</span><span>◇ Make room for the what-ifs</span><span>↩ Loop back, without the clutter</span><span>▷ Think it through in simulation</span></div>
       <section class="features-section" id="features"><div class="section-heading"><div class="eyebrow">LESS ARRANGING. MORE THINKING.</div><h2>Everything flows from here.</h2><p>No wrestling with arrows or nudging boxes into place.<br />Just your idea, and the next right step.</p></div><div class="feature-grid">
         <article class="feature-card"><span class="feature-icon">↓</span><h3>A happy path that stays happy.</h3><p>Click to add a step. Your flow grows vertically, with automatic layout keeping the main path in one clean column.</p></article>
-        <article class="feature-card"><span class="feature-icon">◇</span><h3>Simple questions. Clear branches.</h3><p>Every diamond asks a boolean question. Yes goes down. No goes right. More alternatives? Add another decision.</p></article>
-        <article class="feature-card"><span class="feature-icon">↩</span><h3>Come full circle.</h3><p>Loop to an existing step by name. A translucent alias keeps the reference visible without tangling up your diagram.</p></article>
+        <article class="feature-card"><span class="feature-icon">◆</span><h3>Simple questions. Clear branches.</h3><p>Every decision asks a boolean question. Yes goes down. No goes right. More alternatives? Add another decision.</p></article>
+        <article class="feature-card"><span class="feature-icon">↩</span><h3>Come full circle.</h3><p>Loop to an existing step by name. Its translucent alias draws every path it closes, and the arrow jumps straight to the original.</p></article>
         <article class="feature-card"><span class="feature-icon">▷</span><h3>Take your idea for a walk.</h3><p>Switch to simulation, choose an outcome, and follow the path. Go back, restart, and explore a different possibility.</p></article>
         <article class="feature-card"><span class="feature-icon">⌘</span><h3>A home for every flow.</h3><p>Create, rename, and duplicate multiple flows. Changes save to IndexedDB in this browser—no account or backend required.</p></article>
         <article class="feature-card"><span class="feature-icon">⊞</span><h3>Never lose the bigger picture.</h3><p>When a flow grows beyond the canvas, a clickable minimap helps you find your way. Undo and redo keep edits forgiving.</p></article>

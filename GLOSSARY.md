@@ -19,7 +19,7 @@ The main sequence of steps in a flow, shown in a single vertical column.
 An alternative path from a decision, shown in a new column to the right.
 
 **Decision**:
-A diamond-shaped boolean question with exactly two outcomes: Yes continues below, and No extends to the right. Multiple alternatives are represented by additional decisions to the right, not extra outcomes on one decision.
+A boolean question with exactly two outcomes: Yes continues below, and No extends to the right. Multiple alternatives are represented by additional decisions to the right, not extra outcomes on one decision.
 
 **Alias card**:
 A semi-transparent reference to an existing step, rather than a separate copy of that step.

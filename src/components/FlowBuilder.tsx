@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import {
   addAlias,
+  convertToAlias,
   createFlow,
+  convertToDecision,
   deleteNode,
   duplicateFlow,
   insertNode,
   previewDeletion,
+  retargetAlias,
   updateNode,
   type DeleteChoice,
   type Flow,
@@ -35,7 +38,7 @@ import Modal from "./Modal.tsx";
 type Dialog =
   | { kind: "create" }
   | { kind: "manage" | "delete-flow"; flowId: string }
-  | { kind: "loop"; parent: string; port: Port }
+  | { kind: "loop"; parent?: string; port?: Port; alias?: string; convert?: string }
   | { kind: "delete-node"; id: string };
 interface Props {
   adClient: string;
@@ -48,6 +51,8 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
   const [histories, setHistories] = useState<Record<string, History>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selected, setSelected] = useState("");
+  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
+  const [focusRequest, setFocusRequest] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [status, setStatus] = useState("Saved in this browser");
@@ -183,6 +188,11 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
     setSelected(next.nodes[parent][port]!);
   }
 
+  function jumpToCard(id: string) {
+    setSelected(id);
+    setFocusRequest({ id });
+  }
+
   const selectedNode = flow?.nodes[selected];
   const selectedPosition = flow
     ? layoutFlow(flow).cards.find((card) => card.id === selected)
@@ -229,10 +239,21 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
   return (
     <div className="builder-app">
       <header className="app-header">
-        <a className="brand" href="/">
-          <span className="brand-mark">↳</span> show the path
-          <span className="beta-tag">POC</span>
-        </a>
+        <div className="header-brand-group">
+          <button
+            className="library-toggle"
+            aria-label={libraryCollapsed ? "Expand flows" : "Collapse flows"}
+            aria-expanded={!libraryCollapsed}
+            aria-controls="flow-library"
+            onClick={() => setLibraryCollapsed((value) => !value)}
+          >
+            {libraryCollapsed ? "☰" : "⇤"}
+          </button>
+          <a className="brand" href="/">
+            <span className="brand-mark">↳</span> show the path
+            <span className="beta-tag">POC</span>
+          </a>
+        </div>
         <span className="local-badge">
           <span className="status-dot" /> Local-first workspace
         </span>
@@ -241,7 +262,11 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
         </a>
       </header>
       <div className="app-layout">
-        <aside className="library-sidebar">
+        <aside
+          id="flow-library"
+          className="library-sidebar"
+          hidden={libraryCollapsed}
+        >
           <div className="sidebar-heading">
             <button
               className="text-button"
@@ -472,8 +497,14 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                   selected={selected}
                   simulation={!!run}
                   current={run?.current}
+                  focusRequest={focusRequest}
                   onSelect={setSelected}
                   onAdd={add}
+                  onLoop={(parent, port) => {
+                    setSearch("");
+                    setDialog({ kind: "loop", parent, port });
+                  }}
+                  onJump={jumpToCard}
                 />
                 <aside
                   className="inspector-sidebar"
@@ -563,11 +594,20 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                                 original card.
                               </p>
                               <button
-                                onClick={() =>
-                                  setSelected(selectedNode.target!)
-                                }
+                                onClick={() => jumpToCard(selectedNode.target!)}
                               >
                                 Go to original step ↗
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSearch("");
+                                  setDialog({
+                                    kind: "loop",
+                                    alias: selectedNode.id,
+                                  });
+                                }}
+                              >
+                                ⇄ Change loop target…
                               </button>
                             </>
                           ) : (
@@ -583,6 +623,30 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                                 )
                               }
                             />
+                          )}
+                          {selectedNode.kind === "step" && (
+                            <button
+                              className="convert-card"
+                              onClick={() =>
+                                apply(convertToDecision(flow, selectedNode.id))
+                              }
+                            >
+                              ◆ Convert to decision
+                            </button>
+                          )}
+                          {selectedNode.kind === "step" && !selectedNode.next && (
+                            <button
+                              className="convert-card"
+                              onClick={() => {
+                                setSearch("");
+                                setDialog({
+                                  kind: "loop",
+                                  convert: selectedNode.id,
+                                });
+                              }}
+                            >
+                              ↩ Convert to loop to…
+                            </button>
                           )}
                           {selectedNode.kind !== "alias" &&
                             pathActions(
@@ -602,7 +666,11 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                             <button
                               className="danger text-button delete-card"
                               onClick={() => {
-                                setKeep(selectedNode.kind === "decision" ? "" : "next");
+                                setKeep(
+                                  selectedNode.kind === "decision"
+                                    ? ""
+                                    : "next",
+                                );
                                 setDialog({
                                   kind: "delete-node",
                                   id: selectedNode.id,
@@ -731,14 +799,20 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
         </Modal>
       )}
       {dialog?.kind === "delete-flow" && (
-        <Modal title="Delete this flow?" onClose={closeDialog} busy={deletingFlow}>
+        <Modal
+          title="Delete this flow?"
+          onClose={closeDialog}
+          busy={deletingFlow}
+        >
           <p>
             This removes{" "}
             <strong>{histories[dialog.flowId]?.present.title}</strong> and all
             its cards from this browser. This action cannot be undone.
           </p>
           <div className="modal-actions">
-            <button onClick={closeDialog} disabled={deletingFlow}>Cancel</button>
+            <button onClick={closeDialog} disabled={deletingFlow}>
+              Cancel
+            </button>
             <button
               className="destructive"
               disabled={deletingFlow}
@@ -748,7 +822,9 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                 deletingIds.current.add(id);
                 setDeletingFlow(true);
                 dirty.current = true;
-                const removal = queue.current.catch(() => {}).then(() => repository.remove(id));
+                const removal = queue.current
+                  .catch(() => {})
+                  .then(() => repository.remove(id));
                 queue.current = removal.catch(() => {});
                 try {
                   await removal;
@@ -782,7 +858,16 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
         </Modal>
       )}
       {dialog?.kind === "loop" && flow && (
-        <Modal title="Loop to an existing card" onClose={closeDialog}>
+        <Modal
+          title={
+            dialog.alias
+              ? "Point this loop to another card"
+              : dialog.convert
+                ? "Convert this terminal step to a loop"
+                : "Loop to an existing card"
+          }
+          onClose={closeDialog}
+        >
           <label>
             Find a step or decision
             <input
@@ -798,6 +883,8 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                 (card) =>
                   !card.placeholder &&
                   flow.nodes[card.id].kind !== "alias" &&
+                  card.id !== flow.nodes[dialog.alias ?? ""]?.target &&
+                  card.id !== dialog.convert &&
                   flow.nodes[card.id].title
                     .toLowerCase()
                     .includes(search.toLowerCase()),
@@ -806,14 +893,20 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
                 <button
                   key={card.id}
                   onClick={() => {
-                    const next = addAlias(
-                      flow,
-                      dialog.parent,
-                      dialog.port,
-                      card.id,
-                    );
-                    apply(next);
-                    setSelected(next.nodes[dialog.parent][dialog.port]!);
+                    if (dialog.alias) {
+                      apply(retargetAlias(flow, dialog.alias, card.id));
+                    } else if (dialog.convert) {
+                      apply(convertToAlias(flow, dialog.convert, card.id));
+                    } else {
+                      const next = addAlias(
+                        flow,
+                        dialog.parent!,
+                        dialog.port!,
+                        card.id,
+                      );
+                      apply(next);
+                      setSelected(next.nodes[dialog.parent!][dialog.port!]!);
+                    }
                     closeDialog();
                   }}
                 >
@@ -823,7 +916,11 @@ export default function FlowBuilder({ adClient, adSlot, adsEnabled }: Props) {
               ))}
           </div>
           <p className="modal-help">
-            The alias follows the original card’s name and contents.
+            {dialog.alias
+              ? "The alias keeps its position; only what it points to changes."
+              : dialog.convert
+                ? "The step becomes a loop reference; undo restores it."
+                : "The alias follows the original card’s name and contents."}
           </p>
         </Modal>
       )}
@@ -974,9 +1071,13 @@ function DeleteCardDialog({
           What should happen to its paths?
           <select
             value={keep}
-            onChange={(event) => onKeep(event.target.value as DeleteChoice | "")}
+            onChange={(event) =>
+              onKeep(event.target.value as DeleteChoice | "")
+            }
           >
-            <option value="" disabled>Choose which path to keep…</option>
+            <option value="" disabled>
+              Choose which path to keep…
+            </option>
             <option value="next">Keep Yes path; remove No path</option>
             <option value="no">Keep No path; remove Yes path</option>
             <option value="all">Remove both downstream paths</option>
@@ -988,21 +1089,23 @@ function DeleteCardDialog({
           preserved.
         </p>
       )}
-      {plan && <div className="deletion-preview">
-        <strong>
-          {plan.removed.length} card{plan.removed.length === 1 ? "" : "s"} will
-          be removed
-        </strong>
-        <ul>
-          {plan.removed.map((removed) => (
-            <li key={removed}>
-              {flow.nodes[removed].kind === "alias"
-                ? `Alias → ${flow.nodes[flow.nodes[removed].target!]?.title}`
-                : flow.nodes[removed].title}
-            </li>
-          ))}
-        </ul>
-      </div>}
+      {plan && (
+        <div className="deletion-preview">
+          <strong>
+            {plan.removed.length} card{plan.removed.length === 1 ? "" : "s"}{" "}
+            will be removed
+          </strong>
+          <ul>
+            {plan.removed.map((removed) => (
+              <li key={removed}>
+                {flow.nodes[removed].kind === "alias"
+                  ? `Alias → ${flow.nodes[flow.nodes[removed].target!]?.title}`
+                  : flow.nodes[removed].title}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {plan && plan.references.length > 0 && (
         <div className="reference-warning">
           <p>Resolve these aliases first so no loops point to deleted cards:</p>
