@@ -100,9 +100,15 @@ export function addAlias(
 export function convertToAlias(flow: Flow, id: string, targetId: string): Flow {
   const copy = structuredClone(flow);
   const node = copy.nodes[id];
-  if (node?.kind !== "step") throw new Error("Only a step can be converted to a loop reference");
-  if (node.next) throw new Error("Only a terminal step can become a loop reference");
-  if (Object.values(copy.nodes).some((other) => other.kind === "alias" && other.target === id))
+  if (node?.kind !== "step")
+    throw new Error("Only a step can be converted to a loop reference");
+  if (node.next)
+    throw new Error("Only a terminal step can become a loop reference");
+  if (
+    Object.values(copy.nodes).some(
+      (other) => other.kind === "alias" && other.target === id,
+    )
+  )
     throw new Error("Resolve existing references before converting this step");
   const target = copy.nodes[targetId];
   if (!target || target.kind === "alias" || targetId === id)
@@ -115,14 +121,20 @@ export function convertToAlias(flow: Flow, id: string, targetId: string): Flow {
   return copy;
 }
 
-export function retargetAlias(flow: Flow, aliasId: string, targetId: string): Flow {
+export function retargetAlias(
+  flow: Flow,
+  aliasId: string,
+  targetId: string,
+): Flow {
   const copy = structuredClone(flow);
   const alias = copy.nodes[aliasId];
-  if (alias?.kind !== "alias") throw new Error("Only a loop reference can be retargeted");
+  if (alias?.kind !== "alias")
+    throw new Error("Only a loop reference can be retargeted");
   const target = copy.nodes[targetId];
   if (!target || target.kind === "alias")
     throw new Error("Choose an existing step or decision");
-  if (targetId === alias.target) throw new Error("The loop already points there");
+  if (targetId === alias.target)
+    throw new Error("The loop already points there");
   alias.target = targetId;
   copy.updatedAt = Date.now();
   return copy;

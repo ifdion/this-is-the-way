@@ -35,6 +35,11 @@ User-requested follow-up, superseding the diamond-shaped card presentation in re
 - Show the Continue-this-path placeholder card and its incoming arrow only while the owning card is selected in Build mode.
 - Match minimap highlights to actual canvas scroll bounds; update on scroll, layout, sidebar, and viewport changes.
 
+## Save engine and workspace parts (2026-10-18)
+
+- `Autosave` (`src/lib/autosave.ts`) owns the serial save queue, per-flow revisions, the pending-change map, retry, deletion races, and save status (`saved | saving | part-saved | failed`). Storage sits behind the `FlowWriter` seam; React reads status through `useSyncExternalStore`. Unit-tested against a hand-written in-memory fake repository (no IndexedDB).
+- `FlowBuilder.tsx` slimmed from 1132 to 434 lines into connector roles: `builder/LibrarySidebar`, `CollectionScreen`, `WorkspaceToolbar`, `SimulationPanel`, `FlowInspector` (with `NodeEditor` and `pathActions`), and `builder/dialogs/{CreateFlowDialog,ManageFlowDialog,DeleteFlowDialog,LoopTargetDialog,DeleteCardDialog}`. Selectors, labels, and behavior unchanged; 20 e2e tests pass untouched.
+
 ## Later, not POC
 
 Backend storage, login, sharing, and export to PDF, Mermaid, and Markdown.

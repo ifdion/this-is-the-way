@@ -1,6 +1,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { Flow, Port } from "../lib/flow.ts";
-import { aliasElbow, CARD_HEIGHT, CARD_WIDTH, layoutFlow } from "../lib/layout.ts";
+import {
+  aliasElbow,
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  layoutFlow,
+} from "../lib/layout.ts";
 
 interface Props {
   flow: Flow;
@@ -42,7 +47,9 @@ export default function FlowCanvas({
   const referenceId = hoveredAlias || focusedAlias;
   const reference = referenceId ? flow.nodes[referenceId] : undefined;
   const referenceFrom = reference ? cards.get(reference.id) : undefined;
-  const referenceTo = reference?.target ? cards.get(reference.target) : undefined;
+  const referenceTo = reference?.target
+    ? cards.get(reference.target)
+    : undefined;
 
   useEffect(() => {
     const element = scroll.current!;
@@ -133,8 +140,20 @@ export default function FlowCanvas({
                   strokeWidth="1.2"
                 />
               </marker>
-              <marker id="loop-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                <path d="M1,1 L7,4 L1,7" fill="none" stroke="#36744e" strokeWidth="1.5" />
+              <marker
+                id="loop-arrow"
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+              >
+                <path
+                  d="M1,1 L7,4 L1,7"
+                  fill="none"
+                  stroke="#36744e"
+                  strokeWidth="1.5"
+                />
               </marker>
             </defs>
             {layout.connections.map((edge) => {
@@ -171,7 +190,14 @@ export default function FlowCanvas({
                 </g>
               );
             })}
-            {referenceFrom && referenceTo && <path data-testid="alias-elbow" className="alias-elbow" d={aliasElbow(referenceFrom, referenceTo)} markerEnd="url(#loop-arrow)" />}
+            {referenceFrom && referenceTo && (
+              <path
+                data-testid="alias-elbow"
+                className="alias-elbow"
+                d={aliasElbow(referenceFrom, referenceTo)}
+                markerEnd="url(#loop-arrow)"
+              />
+            )}
           </svg>
           {layout.cards.map((position) => {
             const style = {
@@ -222,9 +248,17 @@ export default function FlowCanvas({
                   data-node-kind={node.kind}
                   aria-label={`${node.kind}: ${title}`}
                   aria-pressed={!simulation && selected === node.id}
-                  onMouseEnter={() => { if (node.kind === "alias") setHoveredAlias(node.id); }}
+                  onMouseEnter={() => {
+                    if (node.kind === "alias") setHoveredAlias(node.id);
+                  }}
                   onMouseLeave={() => setHoveredAlias(null)}
-                  onFocus={event => { if (node.kind === "alias" && event.currentTarget.matches(":focus-visible")) setFocusedAlias(node.id); }}
+                  onFocus={(event) => {
+                    if (
+                      node.kind === "alias" &&
+                      event.currentTarget.matches(":focus-visible")
+                    )
+                      setFocusedAlias(node.id);
+                  }}
                   onBlur={() => setFocusedAlias(null)}
                   onClick={() => {
                     if (!simulation) onSelect(node.id);
@@ -237,15 +271,17 @@ export default function FlowCanvas({
                       ◆
                     </span>
                   )}
-                  {!terminal && <span className="card-kind">
-                    {node.kind === "alias"
-                      ? "↩ LOOP TO"
-                      : node.kind === "start"
-                        ? "● ENTRY POINT"
-                        : node.kind === "decision"
-                          ? "DECISION"
-                          : "STEP"}
-                  </span>}
+                  {!terminal && (
+                    <span className="card-kind">
+                      {node.kind === "alias"
+                        ? "↩ LOOP TO"
+                        : node.kind === "start"
+                          ? "● ENTRY POINT"
+                          : node.kind === "decision"
+                            ? "DECISION"
+                            : "STEP"}
+                    </span>
+                  )}
                   <strong>{title}</strong>
                   {(node.kind === "step" || node.kind === "decision") &&
                     node.description && (
@@ -270,9 +306,14 @@ export default function FlowCanvas({
                     title="Go to referred step"
                     onMouseEnter={() => setHoveredAlias(node.id)}
                     onMouseLeave={() => setHoveredAlias(null)}
-                    onFocus={event => { if (event.currentTarget.matches(":focus-visible")) setFocusedAlias(node.id); }}
+                    onFocus={(event) => {
+                      if (event.currentTarget.matches(":focus-visible"))
+                        setFocusedAlias(node.id);
+                    }}
                     onBlur={() => setFocusedAlias(null)}
-                    onClick={() => { if (node.target) onJump(node.target); }}
+                    onClick={() => {
+                      if (node.target) onJump(node.target);
+                    }}
                   >
                     ↗
                   </button>

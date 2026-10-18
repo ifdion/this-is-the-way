@@ -27,5 +27,9 @@ A semi-transparent reference to an existing step, rather than a separate copy of
 **Build mode**:
 The mode for creating and editing a flow.
 
+**Autosave**:
+The background engine that serializes every staged change to browser storage. _Staging_ records a changed flow; _withdrawing_ removes a deleted flow. Status is one of saved, saving, part-saved, failed.
+_Avoid_: persist (when referring to what the engine does), debounce (staging is immediate)
+
 **Simulation mode**:
 The mode for manually walking through a flow by advancing steps and choosing branches, without executing code or external actions.
